@@ -30,7 +30,7 @@ const fiches = await getCachedClientResources(slug, category);
         <StatusBar />
 
       <Link
-  href={`/client/${slug}/ressources/${category.href}`}
+  href={`/client/${slug}/ressources/${category}`}
   prefetch={true}
   className={`block overflow-hidden rounded-[30px] ...`}
 >
