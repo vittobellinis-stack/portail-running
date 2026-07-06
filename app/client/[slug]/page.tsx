@@ -289,7 +289,6 @@ const challenges = client.challenges.map((challenge: any, index: number) => ({
 
               return (
                 <div key={challenge.title} className={`relative overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-br ${challenge.color} p-4`}>
-                  <div className="absolute -right-4 -top-4 text-7xl opacity-10">{challenge.emoji}</div>
 
                   <div className="relative flex items-center gap-4">
 <div className="relative h-16 w-16 shrink-0">
