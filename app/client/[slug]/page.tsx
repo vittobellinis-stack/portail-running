@@ -12,6 +12,8 @@ import {
   Crosshair,
   TrendingDown,
   Timer,
+  Flame,
+  Trophy,
 } from "lucide-react";
 
 
@@ -164,6 +166,9 @@ const challenges = client.challenges.map((challenge: any, index: number) => ({
   description: challenge.description,
   points: challenge.points,
   color:
+
+
+  
     index === 0
       ? "from-sky-500/30 to-blue-700/20"
       : "from-violet-500/30 to-fuchsia-700/20",
@@ -280,7 +285,7 @@ const challenges = client.challenges.map((challenge: any, index: number) => ({
 
           <div className="mt-5 space-y-4">
             {challenges.map((challenge) => {
-              const Icon = challenge.icon;
+            
 
               return (
                 <div key={challenge.title} className={`relative overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-br ${challenge.color} p-4`}>
