@@ -83,7 +83,7 @@ async function getBilans(clientPageId: string) {
   const response = await notion.databases.query({
     database_id: process.env.NOTION_BILANS_DATABASE_ID!,
     filter: {
-      property: "Client",
+      property: "Clients",
       relation: {
         contains: clientPageId,
       },
@@ -248,7 +248,7 @@ export const getCachedClient = unstable_cache(
   async (slug: string) => {
     return getClient(slug);
   },
-  ["client"],
+  ["clients"],
   {
     revalidate: 60,
   }
