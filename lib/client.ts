@@ -51,7 +51,7 @@ async function getLatestBilan(clientPageId: string) {
   const response = await notion.databases.query({
     database_id: process.env.NOTION_BILANS_DATABASE_ID!,
     filter: {
-      property: "Client",
+      property: "Clients",
       relation: {
         contains: clientPageId,
       },
