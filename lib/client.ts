@@ -1,66 +1,255 @@
-import { notion, getClientByName } from "@/lib/notion";
+import { notion } from "@/lib/notion";
+import { unstable_cache } from "next/cache";
 
-function getNumber(prop: any) {
-  return prop?.number ?? 0;
+function textFromTitle(prop: any) {
+  return prop?.title?.[0]?.plain_text ?? "";
 }
 
-function getDate(prop: any) {
+function textFromRichText(prop: any) {
+  return prop?.rich_text?.[0]?.plain_text ?? "";
+}
+
+function numberFromProperty(prop: any): number {
+  if (!prop) return 0;
+
+  if (prop.type === "number") return prop.number ?? 0;
+
+  if (prop.type === "formula" && prop.formula?.type === "number") {
+    return prop.formula.number ?? 0;
+  }
+
+  return 0;
+}
+
+function dateFromProperty(prop: any) {
   return prop?.date?.start ?? "";
 }
 
-export async function getClient() {
-  const page: any = await getClientByName("Medea Desclos");
+function clean(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function slugify(value: string) {
+  return clean(value)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function getProp(properties: any, search: string) {
+  const key = Object.keys(properties).find((k) =>
+    clean(k).startsWith(clean(search))
+  );
+
+  return key ? properties[key] : null;
+}
+
+async function getLatestBilan(clientPageId: string) {
+  const response = await notion.databases.query({
+    database_id: process.env.NOTION_BILANS_DATABASE_ID!,
+    filter: {
+      property: "Client",
+      relation: {
+        contains: clientPageId,
+      },
+    },
+    sorts: [
+      {
+        property: "Date du bilan",
+        direction: "descending",
+      },
+    ],
+    page_size: 1,
+  });
+
+  const bilan: any = response.results[0];
+
+  if (!bilan) return null;
+
+  const p = bilan.properties;
+
+  return {
+    poids: numberFromProperty(getProp(p, "Poids")),
+    taille: numberFromProperty(getProp(p, "Tour de taille")),
+    hanches: numberFromProperty(getProp(p, "Tour de hanches")),
+    date: dateFromProperty(getProp(p, "Date du bilan")),
+  };
+}
+
+async function getBilans(clientPageId: string) {
+  const response = await notion.databases.query({
+    database_id: process.env.NOTION_BILANS_DATABASE_ID!,
+    filter: {
+      property: "Client",
+      relation: {
+        contains: clientPageId,
+      },
+    },
+    sorts: [
+      {
+        property: "Date du bilan",
+        direction: "descending",
+      },
+    ],
+    page_size: 3,
+  });
+return (response.results as any[]).map((bilan) => {
+  const p = bilan.properties;
+
+  console.log("DATE BRUTE =", dateFromProperty(getProp(p, "Date du bilan")));
+
+  return {
+    poids: numberFromProperty(getProp(p, "Poids")),
+    taille: numberFromProperty(getProp(p, "Tour de taille")),
+    hanches: numberFromProperty(getProp(p, "Tour de hanches")),
+    date: dateFromProperty(getProp(p, "Date du bilan")),
+  };
+});
+}
+
+export async function getClient(slug: string) {
+  const response = await notion.databases.query({
+    database_id: process.env.NOTION_CLIENTS_DATABASE_ID!,
+  });
+
+  const page: any = response.results.find((item: any) => {
+    const nom = textFromTitle(item.properties["Nom"]);
+    return slugify(nom) === slug;
+  });
 
   if (!page) return null;
 
   const p = page.properties;
 
-  let bilans: any[] = [];
-
-  if (process.env.NOTION_BILANS_DATABASE_ID) {
-    const response = await notion.databases.query({
-      database_id: process.env.NOTION_BILANS_DATABASE_ID,
-      filter: {
-        property: "Clients",
-        relation: {
-          contains: page.id,
-        },
-      },
-      sorts: [
-        {
-          property: "Date du bilan",
-          direction: "ascending",
-        },
-      ],
-    });
-
-    bilans = response.results.map((bilan: any) => {
-      const bp = bilan.properties;
-
-      return {
-        date: getDate(bp["Date du bilan"]),
-        poids: getNumber(bp["Poids"]),
-        taille: getNumber(bp["Tour de taille"]),
-        hanche: getNumber(bp["Tour de hanches"]),
-      };
-    });
-  }
-
-  const dernierBilan = bilans[bilans.length - 1];
+  const latestBilan = await getLatestBilan(page.id);
+  console.log(latestBilan);
+  const bilans = await getBilans(page.id);
+  const challenges = await getChallenges(page.id);
+const sessions = await getNextSessions(page.id);
+console.log("SESSIONS =", sessions);
+  const poidsInitial = numberFromProperty(getProp(p, "Poids initial"));
+  const poidsActuel = latestBilan?.poids ?? 0;
+  const objectifPoids = numberFromProperty(getProp(p, "Objectif poids"));
 
   return {
-    id: page.id,
-    nom: p?.Nom?.title?.[0]?.plain_text ?? "Médéa",
-    poidsInitial: p?.["Poids initial"]?.number ?? 83,
-    poidsActuel: dernierBilan?.poids ?? 80,
-    objectif: 73,
-    prochaineSeance:
-      p?.["Prochaine séance"]?.rollup?.date?.start ?? "04 juil.",
-    messageCoach:
-      p?.["Message du coach"]?.formula?.string ??
-      "🔥 Très beau travail cette semaine ! Continue comme ça 💜",
-    resteARegler: p?.["Reste à encaisser"]?.rollup?.number ?? 150,
-    photo: "",
+    nom: textFromTitle(p["Nom"]),
+    poidsInitial,
+    poidsActuel,
+    objectifPoids,
+    challenges,
+sessions,
+    dernierBilan: latestBilan,
     bilans,
+
+    messageCoach:
+      textFromRichText(getProp(p, "Message coach")) ||
+      "Bravo, continue comme ça 💜",
+
+    challenge1:
+      textFromRichText(getProp(p, "Challenge 1")) ||
+      "Boire 2L d’eau",
+
+    challenge2:
+      textFromRichText(getProp(p, "Challenge 2")) ||
+      "Petit-déjeuner protéiné",
   };
+}async function getChallenges(clientPageId: string) {
+  const response = await notion.databases.query({
+    database_id: process.env.NOTION_CHALLENGES_DATABASE_ID!,
+    filter: {
+      and: [
+        {
+          property: "Clients",
+          relation: {
+            contains: clientPageId,
+          },
+        },
+        {
+          property: "actif",
+          checkbox: {
+            equals: true,
+          },
+        },
+      ],
+    },
+    sorts: [
+      {
+        property: "ordre",
+        direction: "ascending",
+      },
+    ],
+    page_size: 2,
+  });
+
+ return (response.results as any[]).map((challenge) => {
+  const p = challenge.properties;
+
+  return {
+    title: textFromTitle(p["Nom Challenge"]),
+    description: textFromRichText(p["description"]),
+    points: numberFromProperty(p["points"]),
+    categorie: p["catégories"]?.select?.name ?? "",
+    illustration: p["Illustration"]?.select?.name ?? "target",
+  };
+});
 }
+async function getNextSessions(clientPageId: string) {
+  const today = new Date().toISOString().split("T")[0];
+
+  const response = await notion.databases.query({
+    database_id: process.env.NOTION_SEANCES_DATABASE_ID!,
+    filter: {
+      and: [
+        {
+          property: "Clients",
+          relation: {
+            contains: clientPageId,
+          },
+        },
+        {
+          property: "Date",
+          date: {
+            on_or_after: today,
+          },
+        },
+      ],
+    },
+    sorts: [
+      {
+        property: "Date",
+        direction: "ascending",
+      },
+    ],
+    page_size: 3,
+  });
+
+  return (response.results as any[]).map((session) => {
+    const p = session.properties;
+    const dateStart = p["Date"]?.date?.start ?? "";
+
+    return {
+      title: textFromTitle(p["Séance"]),
+      date: dateStart,
+      type: p["Type"]?.select?.name ?? "",
+      etat: p["État"]?.status?.name ?? "",
+      heure: dateStart
+        ? new Date(dateStart).toLocaleTimeString("fr-FR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "Heure à définir",
+    };
+  });
+}
+export const getCachedClient = unstable_cache(
+  async (slug: string) => {
+    return getClient(slug);
+  },
+  ["client"],
+  {
+    revalidate: 60,
+  }
+);

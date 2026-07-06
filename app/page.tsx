@@ -1,51 +1,5 @@
-import StatusBar from "@/components/mobile/StatusBar";
-import HeroCard from "@/components/mobile/HeroCard";
-import StatsCards from "@/components/mobile/StatsCards";
-import WeightChart from "@/components/mobile/WeightChart";
-import MeasurementsChart from "@/components/mobile/MeasurementsChart";
-import LastPhoto from "@/components/mobile/LastPhoto";
-import CoachMessage from "@/components/mobile/CoachMessage";
-import PaymentCard from "@/components/mobile/PaymentCard";
-import GoalsCard from "@/components/mobile/GoalsCard";
-import BottomNav from "@/components/mobile/BottomNav";
-import { getClient } from "@/lib/client";
+import { redirect } from "next/navigation";
 
-export default async function Home() {
-  const client = await getClient();
-
-  if (!client) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#050816] text-white">
-        Client introuvable.
-      </main>
-    );
-  }
-
-  return (
-    <main className="min-h-screen overflow-hidden bg-[#050816] px-5 pb-32 pt-4 text-white">
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(139,92,246,0.35),transparent_32%),radial-gradient(circle_at_90%_10%,rgba(59,130,246,0.20),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(124,58,237,0.18),transparent_35%)]" />
-
-      <div className="relative mx-auto max-w-md space-y-5">
-        <StatusBar />
-
-        <section>
-          <p className="text-sm text-slate-400">Heureux de te revoir 👋</p>
-          <h1 className="mt-1 text-4xl font-black tracking-tight">
-            Bonjour {client.nom}
-          </h1>
-        </section>
-
-        <HeroCard client={client} />
-        <StatsCards client={client} />
-        <WeightChart bilans={client.bilans} />
-        <MeasurementsChart bilans={client.bilans} />
-        <LastPhoto client={client} />
-        <CoachMessage client={client} />
-        <PaymentCard client={client} />
-        <GoalsCard />
-      </div>
-
-      <BottomNav />
-    </main>
-  );
+export default function Home() {
+  redirect("/client/medea-desclos");
 }
