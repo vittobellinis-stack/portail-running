@@ -58,7 +58,7 @@ export default async function Home({
           <input
             name="slug"
             type="text"
-            placeholder="Identifiant : prenom-nom"
+            placeholder="Identifiant"
             className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-5 py-4 text-white outline-none placeholder:text-slate-500"
           />
 

@@ -143,6 +143,7 @@ console.log("SESSIONS =", sessions);
 sessions,
     dernierBilan: latestBilan,
     bilans,
+password: textFromRichText(getProp(p, "Mot de passe")),
 
     messageCoach:
       textFromRichText(getProp(p, "Message coach")) ||
