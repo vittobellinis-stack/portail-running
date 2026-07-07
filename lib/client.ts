@@ -82,12 +82,22 @@ async function getLatestBilan(clientPageId: string) {
 async function getBilans(clientPageId: string) {
   const response = await notion.databases.query({
     database_id: process.env.NOTION_BILANS_DATABASE_ID!,
-    filter: {
+  filter: {
+  and: [
+    {
       property: "Clients",
       relation: {
         contains: clientPageId,
       },
     },
+    {
+      property: "Période du bilan",
+      select: {
+        equals: "Bilan mensuel",
+      },
+    },
+  ],
+},
     sorts: [
       {
         property: "Date du bilan",
