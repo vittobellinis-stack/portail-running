@@ -273,9 +273,9 @@ const challenges = client.challenges.map((challenge: any, index: number) => ({
   </div>
 
   <div className="relative mt-6 rounded-[28px] border border-white/10 bg-slate-950/50 p-5 shadow-inner">
-    <p className="text-[15px] leading-8 text-slate-200">
-      {client.messageCoach || "Bravo, continue comme ça 💜"}
-    </p>
+   <p className="text-justify text-[15px] leading-8 text-slate-200">
+  {client.messageCoach || "Bravo, continue comme ça 💜"}
+</p>
 
     <div className="mt-5 flex justify-end">
       <span className="rounded-full bg-violet-500/15 px-4 py-2 text-xs font-black text-violet-300">
