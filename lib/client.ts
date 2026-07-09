@@ -167,45 +167,34 @@ password: textFromRichText(getProp(p, "Mot de passe")),
       textFromRichText(getProp(p, "Challenge 2")) ||
       "Petit-déjeuner protéiné",
   };
-}async function getChallenges(clientPageId: string) {
+async function getChallenges(clientPageId: string) {
   const response = await notion.databases.query({
     database_id: process.env.NOTION_CHALLENGES_DATABASE_ID!,
-    filter: {
-      and: [
-        {
-          property: "Clients",
-          relation: {
-            contains: clientPageId,
-          },
-        },
-        {
-          property: "actif",
-          checkbox: {
-            equals: true,
-          },
-        },
-      ],
-    },
-    sorts: [
-      {
-        property: "ordre",
-        direction: "ascending",
-      },
-    ],
-    page_size: 2,
+    page_size: 20,
   });
 
- return (response.results as any[]).map((challenge) => {
-  const p = challenge.properties;
+  return (response.results as any[])
+    .sort((a, b) => {
+      const ordreA = a.properties["ordre"]?.number ?? 999;
+      const ordreB = b.properties["ordre"]?.number ?? 999;
+      return ordreA - ordreB;
+    })
+    .slice(0, 2)
+    .map((challenge) => {
+      const p = challenge.properties;
 
-  return {
-    title: textFromTitle(p["Nom Challenge"]),
-    description: textFromRichText(p["description"]),
-    points: numberFromProperty(p["points"]),
-    categorie: p["catégories"]?.select?.name ?? "",
-    illustration: p["Illustration"]?.select?.name ?? "target",
-  };
-});
+      return {
+        title: textFromTitle(p["Challenge"]),
+        description: textFromRichText(p["description"]),
+        points: numberFromProperty(p["Points"]),
+        categorie: p["Catégories"]?.select?.name ?? "",
+        difficulte: p["Difficulté"]?.select?.name ?? "",
+        duree: p["Durée"]?.select?.name ?? "",
+        validation: p["Validation"]?.select?.name ?? "",
+        ordre: numberFromProperty(p["ordre"]),
+      };
+    });
+}
 }
 async function getNextSessions(clientPageId: string) {
   const today = new Date().toISOString().split("T")[0];
