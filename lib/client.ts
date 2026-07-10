@@ -179,19 +179,20 @@ async function getNextSessions(clientPageId: string) {
   return (response.results as any[]).map((session) => {
     const p = session.properties;
     const dateStart = p["Date"]?.date?.start ?? "";
-
+console.log(dateStart);
     return {
-      title: textFromTitle(p["Séance"]),
-      date: dateStart,
-      type: p["Type"]?.select?.name ?? "",
-      etat: p["État"]?.status?.name ?? "",
-      heure: dateStart
-        ? new Date(dateStart).toLocaleTimeString("fr-FR", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : "Heure à définir",
-    };
+  title: textFromTitle(p["Séance"]),
+  date: dateStart,
+  type: p["Type"]?.select?.name ?? "",
+  etat: p["État"]?.status?.name ?? "",
+  heure: dateStart
+    ? new Date(dateStart).toLocaleTimeString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Europe/Paris",
+      })
+    : "Heure à définir",
+};
   });
 }
 
