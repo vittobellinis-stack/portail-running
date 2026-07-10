@@ -7,16 +7,67 @@ import { redirect } from "next/navigation";
 import {
   CalendarDays,
   ClipboardList,
-  Droplets,
   Target,
   Utensils,
   Scale,
   Crosshair,
   TrendingDown,
-  Timer,
+  Footprints,
+  Dumbbell,
+  Apple,
+  Droplets,
+  Moon,
+    Trophy,
   Flame,
-  Trophy,
+  Timer,
+  HeartPulse,
+  Bike,
+  WineOff,
+  CookingPot,
+  GlassWater,
+  NotebookPen,
+  SportShoe,
+  Fish,
+  Ban,
+  Salad,
+    Camera,
+    ListFilter,
+    Ruler,
+    ArrowBigDownDash,
 } from "lucide-react";
+
+const challengeIcons = {
+  footprints: Footprints,
+  dumbbell: Dumbbell,
+  apple: Apple,
+  droplets: Droplets,
+  moon: Moon,
+  trophy: Trophy,
+  flame: Flame,
+  timer: Timer,
+  heart: HeartPulse,
+  bike: Bike,
+  wineoff: WineOff,
+  "cooking-pot": CookingPot,
+  "glass-water": GlassWater,
+  "notebook-pen": NotebookPen,
+  "sport-shoe": SportShoe,
+    fish: Fish,
+    ban: Ban,
+    salad: Salad,
+    camera: Camera,
+    "list-filter": ListFilter,
+    ruler: Ruler,
+    "arrow-big-down-dash": ArrowBigDownDash,
+};
+const colorByCategory: Record<string, string> = {
+  Sport: "from-yellow-500/30 to-amber-700/20",
+  Nutrition: "from-emerald-500/30 to-green-700/20",
+  "Mode de vie": "from-sky-500/30 to-blue-700/20",
+  Bilan: "from-slate-300/20 to-white/10",
+  Interdit: "from-red-500/30 to-rose-700/20",
+  Habitudes: "from-violet-500/30 to-fuchsia-700/20",
+};
 
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -168,20 +219,43 @@ const progressRaw =
 const progress = Math.max(0, Math.min(progressRaw, 100));
   const reste = client.poidsActuel - client.objectifPoids;
 
-const challenges = client.challenges.map((challenge: any, index: number) => ({
-  illustration: challenge.illustration,
+const colorByCategory: Record<string, string> = {
+  Sport: "from-yellow-500/30 to-amber-700/20",
+  Nutrition: "from-emerald-500/30 to-green-700/20",
+  "Mode de vie": "from-sky-500/30 to-blue-700/20",
+  Bilan: "from-slate-300/20 to-white/10",
+  Interdit: "from-red-500/30 to-rose-700/20",
+  Habitudes: "from-violet-500/30 to-fuchsia-700/20",
+  
+};
+const iconColorByCategory: Record<string, string> = {
+  Sport: "text-yellow-300",
+  Nutrition: "text-emerald-300",
+  "Mode de vie": "text-sky-300",
+  Bilan: "text-white",
+  Interdit: "text-red-300",
+  Habitudes: "text-violet-300",
+};
+
+const challenges = (client.challenges ?? []).map((challenge: any) => ({
+  icon: challenge.icon ?? "target",
   title: challenge.title,
   description: challenge.description,
-  points: challenge.points,
+  points: challenge.points ?? 0,
+  periode: challenge.periode,
+  categorie: challenge.categorie,
   color:
-
-
-  
-    index === 0
-      ? "from-sky-500/30 to-blue-700/20"
-      : "from-violet-500/30 to-fuchsia-700/20",
+    colorByCategory[challenge.categorie] ??
+    "from-slate-500/30 to-slate-700/20",
 }));
 
+const weeklyChallenges = challenges.filter(
+  (challenge) => challenge.periode === "Semaine"
+);
+
+const monthlyChallenges = challenges.filter(
+  (challenge) => challenge.periode === "Mois"
+);
   return (
     <main className="min-h-screen overflow-hidden bg-[#050816] px-5 pb-32 pt-4 text-white">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(168,85,247,.38),transparent_35%),radial-gradient(circle_at_95%_15%,rgba(59,130,246,.24),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(236,72,153,.18),transparent_38%)]" />
@@ -189,12 +263,33 @@ const challenges = client.challenges.map((challenge: any, index: number) => ({
       <div className="relative mx-auto max-w-md space-y-5">
         <StatusBar />
 
-        <section>
-                    <h1 className="mt-1 text-4xl font-black">👋 Salut {(client.nom ?? "").split(" ")[0]}</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-400">
-           <i>Chaque petite action te mène vers la réussite de ton objectif.</i>
-          </p>
-        </section>
+     <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-6">
+  {/* Halo lumineux */}
+  <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-violet-500/20 blur-3xl" />
+  <div className="absolute -right-10 -bottom-10 h-36 w-36 rounded-full bg-sky-500/10 blur-3xl" />
+
+  <div className="relative">
+    <div className="h-px w-16 bg-gradient-to-r from-violet-500 to-transparent" />
+
+    <h1 className="mt-6 text-4xl font-black tracking-tight text-white">
+      👋 Bonjour{" "}
+      <span className="bg-gradient-to-r from-violet-300 via-fuchsia-200 to-white bg-clip-text text-transparent">
+        {client.nom.split(" ")[0]}
+      </span>
+    </h1>
+
+    <p className="mt-3 text-lg font-medium text-slate-300">
+      Ton espace de coaching personnalisé
+    </p>
+
+    <p className="mt-2 max-w-md text-sm leading-7 text-slate-400">
+      Chaque petite victoire te rapproche de ton objectif. Continue à avancer,
+      un pas après l'autre.
+    </p>
+
+    <div className="mt-6 h-px w-full bg-gradient-to-r from-violet-500/40 via-white/10 to-transparent" />
+  </div>
+</section>
 
         <Card className="border-violet-400/20 bg-gradient-to-br from-violet-700/90 via-indigo-900/90 to-[#080b1a]">
           <div className="absolute right-0 top-0 h-52 w-52 rounded-full bg-violet-400/30 blur-3xl" />
@@ -288,25 +383,41 @@ const challenges = client.challenges.map((challenge: any, index: number) => ({
         <Card>
           <div className="flex items-center gap-2">
             <Target className="text-violet-400" size={20} />
-            <h2 className="font-black">Challenges de la semaine</h2>
+            <h2 className="font-black">Challenges</h2>
           </div>
 
           <div className="mt-5 space-y-4">
-            {challenges.map((challenge) => {
+          <h3 className="mb-4 text-xs font-black uppercase tracking-[0.22em] text-violet-300">
+  Objectifs de la semaine
+</h3>
+
+{weeklyChallenges.map((challenge) => {
             
 
               return (
                 <div key={challenge.title} className={`relative overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-br ${challenge.color} p-4`}>
 
                   <div className="relative flex items-center gap-4">
-<div className="relative h-16 w-16 shrink-0">
-  <Image
-    src={illustrations[challenge.illustration as keyof typeof illustrations] || "/illustrations/target.png"}
-    alt={challenge.title}
-    fill
-    className="object-contain drop-shadow-[0_0_18px_rgba(168,85,247,.35)]"
-  />
-</div>
+{
+  (() => {
+    const Icon =
+      challengeIcons[
+        challenge.icon as keyof typeof challengeIcons
+      ] ?? Target;
+
+    return (
+      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10">
+<Icon
+  size={34}
+  className={
+    iconColorByCategory[challenge.categorie] ?? "text-violet-300"
+  }
+  strokeWidth={2.3}
+/>
+      </div>
+    );
+  })()
+}
 
 
                     <div className="flex-1">
@@ -322,6 +433,53 @@ const challenges = client.challenges.map((challenge: any, index: number) => ({
                 </div>
               );
             })}
+            {monthlyChallenges.length > 0 && (
+  <>
+    <h3 className="mb-4 mt-8 text-xs font-black uppercase tracking-[0.22em] text-violet-300">
+      Objectif du mois
+    </h3>
+
+    {monthlyChallenges.map((challenge) => {
+      return (
+        <div
+          key={challenge.title}
+          className={`relative overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-br ${challenge.color} p-4`}
+        >
+          <div className="relative flex items-center gap-4">
+            {(() => {
+              const Icon =
+                challengeIcons[
+                  challenge.icon as keyof typeof challengeIcons
+                ] ?? Target;
+
+              return (
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10">
+                  <Icon
+  size={34}
+  className="text-white"
+  strokeWidth={2.3}
+/>
+                </div>
+              );
+            })()}
+
+            <div className="flex-1">
+              <p className="font-black">{challenge.title}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-300">
+                {challenge.description}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-center">
+              <p className="text-xl font-black text-white">+{challenge.points}</p>
+              <p className="text-[10px] text-slate-300">pts</p>
+            </div>
+          </div>
+        </div>
+      );
+    })}
+  </>
+)}
           </div>
         </Card>
 
