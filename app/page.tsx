@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getClient } from "@/lib/client";
+import { checkClientPassword } from "@/lib/client";
 
 export default async function Home({
   searchParams,
@@ -19,11 +19,11 @@ export default async function Home({
 
     const password = String(formData.get("password") || "").trim();
 
-    const client = await getClient(slug);
+   const client = await getClient(slug);
 
-    if (!client || client.password !== password) {
-      redirect("/?error=1");
-    }
+if (!client || client.password !== password) {
+  redirect("/?error=1");
+}
 
     const cookieStore = await cookies();
 

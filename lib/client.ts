@@ -251,3 +251,21 @@ export const getCachedClient = unstable_cache(
     revalidate: 60,
   }
 );
+export async function checkClientPassword(slug: string, password: string) {
+  const response = await notion.databases.query({
+    database_id: process.env.NOTION_CLIENTS_DATABASE_ID!,
+  });
+
+  const page: any = response.results.find((item: any) => {
+    const nom = textFromTitle(item.properties["Nom"]);
+    return slugify(nom) === slug;
+  });
+
+  if (!page) return false;
+
+  const storedPassword = textFromRichText(
+    getProp(page.properties, "Mot de passe")
+  );
+
+  return storedPassword === password;
+}

@@ -4,6 +4,7 @@ import { getCachedClient } from "@/lib/client";
 import Image from "next/image";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { HeartHandshake } from "lucide-react";
 import {
   CalendarDays,
   ClipboardList,
@@ -271,12 +272,18 @@ const monthlyChallenges = challenges.filter(
   <div className="relative">
     <div className="h-px w-16 bg-gradient-to-r from-violet-500 to-transparent" />
 
-    <h1 className="mt-6 text-4xl font-black tracking-tight text-white">
-      👋 Bonjour{" "}
-      <span className="bg-gradient-to-r from-violet-300 via-fuchsia-200 to-white bg-clip-text text-transparent">
-        {client.nom.split(" ")[0]}
-      </span>
-    </h1>
+   <div className="mt-6 flex items-center gap-3">
+  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/15 border border-violet-400/20">
+   <HeartHandshake className="h-7 w-7 text-violet-300" strokeWidth={2.2} />
+  </div>
+
+  <h1 className="text-4xl font-black tracking-tight text-white">
+    Bonjour{" "}
+    <span className="bg-gradient-to-r from-violet-300 via-fuchsia-200 to-white bg-clip-text text-transparent">
+      {client.nom.split(" ")[0]}
+    </span>
+  </h1>
+</div>
 
     <p className="mt-3 text-lg font-medium text-slate-300">
       Ton espace de coaching personnalisé
