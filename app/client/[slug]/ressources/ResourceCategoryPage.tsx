@@ -9,6 +9,8 @@ const categoryLabels: any = {
   sport: "Sport",
   science: "Science",
   running: "Running",
+  recovery: "Recovery",
+    mindset: "Mindset",
 };
 
 export default async function ResourceCategoryPage({
@@ -29,14 +31,14 @@ const fiches = await getCachedClientResources(slug, category);
       <div className="relative mx-auto max-w-md space-y-6">
         <StatusBar />
 
-      <Link
-  href={`/client/${slug}/ressources/${category}`}
-  prefetch={true}
-  className={`block overflow-hidden rounded-[30px] ...`}
+     <Link
+  href={`/client/${slug}/ressources`}
+  prefetch
+  className="relative z-20 inline-flex items-center gap-2 text-sm text-slate-300 transition hover:text-white"
 >
-          <ChevronLeft size={18} />
-          Retour
-        </Link>
+  <ChevronLeft size={18} />
+  Retour
+</Link>
 
         <section>
           <p className="text-sm font-semibold text-violet-300">Fiches</p>

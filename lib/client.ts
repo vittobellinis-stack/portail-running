@@ -55,27 +55,26 @@ function getProp(properties: any, search: string) {
   return key ? properties[key] : null;
 }
 
-function selectOrRollupName(prop: any) {
-  if (!prop) return "";
+function textFromRollup(prop: any) {
+  const item = prop?.rollup?.array?.[0];
 
-  if (prop.type === "select") {
-    return prop.select?.name ?? "";
-  }
-
-  if (prop.type === "rollup") {
-    const firstItem = prop.rollup?.array?.[0];
-
-    return (
-      firstItem?.select?.name ??
-      firstItem?.rich_text?.[0]?.plain_text ??
-      firstItem?.title?.[0]?.plain_text ??
-      ""
-    );
-  }
-
-  return "";
+  return (
+    item?.title?.[0]?.plain_text ??
+    item?.rich_text?.[0]?.plain_text ??
+    item?.formula?.string ??
+    ""
+  );
 }
 
+function numberFromRollupArray(prop: any) {
+  const item = prop?.rollup?.array?.[0];
+
+  return (
+    item?.number ??
+    item?.formula?.number ??
+    0
+  );
+}
 async function getLatestBilan(clientPageId: string) {
   const response = await notion.databases.query({
     database_id: process.env.NOTION_BILANS_DATABASE_ID!,
@@ -160,38 +159,65 @@ async function getChallenges(clientPageId: string) {
     page_size: 20,
   });
 
-  const challenges = await Promise.all(
-    (response.results as any[]).map(async (item) => {
-      const p = item.properties;
+  return (response.results as any[]).map((item) => {
+    const p = item.properties;
 
-      const challengeRelation =
-        getProp(p, "Bibliothèque")?.relation?.[0];
+    const titreItem = p["Titre"]?.rollup?.array?.[0];
+    const descriptionItem = p["Description"]?.rollup?.array?.[0];
+    const categorieItem = p["Catégorie"]?.rollup?.array?.[0];
+    const difficulteItem = p["Difficulté"]?.rollup?.array?.[0];
+    const dureeItem = p["Durée"]?.rollup?.array?.[0];
+    const iconeItem = p["Icone"]?.rollup?.array?.[0];
+    const pointItem = p["Point"]?.rollup?.array?.[0];
 
-      if (!challengeRelation) return null;
+    return {
+      title:
+        titreItem?.title?.[0]?.plain_text ??
+        titreItem?.rich_text?.[0]?.plain_text ??
+        "",
 
-      const challengePage: any = await notion.pages.retrieve({
-        page_id: challengeRelation.id,
-      });
+      description:
+        descriptionItem?.rich_text?.[0]?.plain_text ??
+        descriptionItem?.title?.[0]?.plain_text ??
+        "",
 
-      const cp = challengePage.properties;
+      points:
+        pointItem?.number ??
+        pointItem?.formula?.number ??
+        0,
 
-      return {
-  title: textFromRichText(p["Titre"]),
-  description: textFromRichText(p["Description"]),
-  points: numberFromProperty(p["Point"]),
-  categorie: selectOrRollupName(p["Catégorie"]),
-  difficulte: selectOrRollupName(p["Difficulté"]),
-  duree: selectOrRollupName(p["Durée"]),
-  statut: p["Statut"]?.status?.name ?? "",
-  debut: p["Début"]?.date?.start ?? "",
-  fin: p["Fin"]?.date?.start ?? "",
-  icon: selectOrRollupName(p["Icone"]) || "target",
-  periode: selectOrRollupName(p["Durée"]) || "Semaine",
-};
-    })
-  );
+      categorie:
+        categorieItem?.select?.name ??
+        categorieItem?.rich_text?.[0]?.plain_text ??
+        "",
 
-  return challenges.filter(Boolean);
+      difficulte:
+        difficulteItem?.select?.name ??
+        difficulteItem?.rich_text?.[0]?.plain_text ??
+        "",
+
+      duree:
+        dureeItem?.select?.name ??
+        dureeItem?.rich_text?.[0]?.plain_text ??
+        "",
+
+      statut: p["Statut"]?.status?.name ?? "",
+
+      debut: p["Début"]?.date?.start ?? "",
+
+      fin: p["Fin"]?.date?.start ?? "",
+
+      icon:
+        iconeItem?.select?.name ??
+        iconeItem?.rich_text?.[0]?.plain_text ??
+        "target",
+
+      periode:
+        dureeItem?.select?.name ??
+        dureeItem?.rich_text?.[0]?.plain_text ??
+        "Semaine",
+    };
+  });
 }
 
 async function getNextSessions(clientPageId: string) {

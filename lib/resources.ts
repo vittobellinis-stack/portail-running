@@ -9,56 +9,90 @@ function clean(value?: string) {
     .trim();
 }
 
-function slugify(value: string) {
-  return clean(value).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+function slugify(value?: string) {
+  return clean(value)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
-function title(prop: any) {
+function textFromTitle(prop: any) {
   return prop?.title?.[0]?.plain_text ?? "";
 }
 
-function richText(prop: any) {
-  return prop?.rich_text?.[0]?.plain_text ?? "";
-}
-
-function fileUrl(prop: any) {
-  const file = prop?.files?.[0];
-  return file?.file?.url ?? file?.external?.url ?? "";
-}
-
 function getProp(properties: any, search: string) {
-  const key = Object.keys(properties).find((k) =>
-    clean(k).startsWith(clean(search))
+  if (!properties) return null;
+
+  const key = Object.keys(properties).find((name) =>
+    clean(name).startsWith(clean(search))
   );
 
   return key ? properties[key] : null;
 }
 
+function textFromRollup(prop: any) {
+  const item = prop?.rollup?.array?.[0];
+
+  return (
+    item?.title?.[0]?.plain_text ??
+    item?.rich_text?.[0]?.plain_text ??
+    item?.formula?.string ??
+    ""
+  );
+}
+
+function selectFromRollup(prop: any) {
+  const item = prop?.rollup?.array?.[0];
+
+  return (
+    item?.select?.name ??
+    item?.status?.name ??
+    item?.rich_text?.[0]?.plain_text ??
+    item?.title?.[0]?.plain_text ??
+    ""
+  );
+}
+
+function numberFromRollup(prop: any) {
+  if (prop?.rollup?.type === "number") {
+    return prop.rollup.number ?? null;
+  }
+
+  const item = prop?.rollup?.array?.[0];
+
+  return item?.number ?? item?.formula?.number ?? null;
+}
+
+function fileFromRollup(prop: any) {
+  const item = prop?.rollup?.array?.[0];
+
+  const file =
+    item?.files?.[0] ??
+    item?.file ??
+    item?.external ??
+    null;
+
+  return (
+    file?.file?.url ??
+    file?.external?.url ??
+    item?.files?.[0]?.file?.url ??
+    item?.files?.[0]?.external?.url ??
+    ""
+  );
+}
+
 async function getClientPage(slug: string) {
   const response = await notion.databases.query({
     database_id: process.env.NOTION_CLIENTS_DATABASE_ID!,
+    filter: {
+      property: "Slug",
+      rich_text: {
+        equals: slug,
+      },
+    },
+    page_size: 1,
   });
 
-  return (response.results as any[]).find((page) => {
-    return slugify(title(page.properties["Nom"])) === slug;
-  });
-}
-
-async function getFicheById(pageId: string) {
-  const page: any = await notion.pages.retrieve({ page_id: pageId });
-  const p = page.properties;
-  console.log("PROPRIÉTÉS FICHE =", Object.keys(p));
-console.dir(p, { depth: null });
-
-return {
-  id: page.id,
-  title: title(p["Nom"]),
-  category: p["Catégorie"]?.select?.name ?? "",
-  description: richText(p["Description"]),
-  pdf: fileUrl(p["PDF"]),
-  cover: fileUrl(p["Aperçu"]),
-  number: p["Numéro"]?.number ?? null,
-};
+  return (response.results as any[])[0] ?? null;
 }
 
 export async function getClientResources(
@@ -95,48 +129,58 @@ export async function getClientResources(
         },
       ],
     },
+    page_size: 100,
   });
 
-  return (response.results as any[])
-    .map((access) => {
+ const fiches = await Promise.all(
+  (response.results as any[]).map(async (access) => {
       const p = access.properties;
 
-      const ficheCategory =
-        p["Catégorie fiche"]?.rollup?.array?.[0]?.select?.name ?? "";
+      const title = textFromRollup(
+        getProp(p, "Titre fiche")
+      );
+
+      const ficheCategory = selectFromRollup(
+        getProp(p, "Catégorie fiche")
+      );
+
+ const ficheRelation =
+  getProp(p, "Fiche")?.relation?.[0];
+
+if (!ficheRelation) {
+  return null;
+}
+
+const fichePage: any = await notion.pages.retrieve({
+  page_id: ficheRelation.id,
+});
+
+const ficheProperties = fichePage.properties;
+
+const pdfFile = ficheProperties["PDF"]?.files?.[0];
+const coverFile = ficheProperties["Aperçu"]?.files?.[0];
+
+const pdf =
+  pdfFile?.file?.url ??
+  pdfFile?.external?.url ??
+  "";
+
+const cover =
+  coverFile?.file?.url ??
+  coverFile?.external?.url ??
+  "";
+
+      const number = numberFromRollup(
+        getProp(p, "Numéro fiche")
+      );
 
       if (slugify(ficheCategory) !== slugify(category)) {
         return null;
       }
 
-      const title =
-        p["Titre fiche"]?.rollup?.array?.[0]?.title?.[0]?.plain_text ??
-        p["Titre fiche"]?.rollup?.array?.[0]?.rich_text?.[0]?.plain_text ??
-        "";
-
-      const pdfItem =
-        p["PDF fiche"]?.rollup?.array?.[0];
-
-      const previewItem =
-        p["Aperçu fiche"]?.rollup?.array?.[0];
-
-      const numberItem =
-        p["Numéro fiche"]?.rollup?.array?.[0];
-
-      const pdf =
-        pdfItem?.files?.[0]?.file?.url ??
-        pdfItem?.files?.[0]?.external?.url ??
-        "";
-
-      const cover =
-        previewItem?.files?.[0]?.file?.url ??
-        previewItem?.files?.[0]?.external?.url ??
-        "";
-
-      const number =
-        numberItem?.number ??
-        null;
-
-      if (!pdf) return null;
+      if (!pdf) {
+        return null;
+      }
 
       return {
         id: access.id,
@@ -147,20 +191,25 @@ export async function getClientResources(
         cover,
         number,
       };
-    })
-    .filter(Boolean);
+       })
+);
+
+return fiches.filter(Boolean);
 }
+
 export async function getResourcesCount(slug: string) {
   const client = await getClientPage(slug);
 
-  if (!client) {
-    return {
-      nutrition: 0,
-      sport: 0,
-      science: 0,
-      running: 0,
-    };
-  }
+  const emptyCounts = {
+  nutrition: 0,
+  sport: 0,
+  science: 0,
+  running: 0,
+  recovery: 0,
+  mindset: 0,
+};
+
+  if (!client) return emptyCounts;
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -188,20 +237,19 @@ export async function getResourcesCount(slug: string) {
         },
       ],
     },
+    page_size: 100,
   });
 
   const counts: Record<string, number> = {
-    nutrition: 0,
-    sport: 0,
-    science: 0,
-    running: 0,
+    ...emptyCounts,
   };
 
   for (const access of response.results as any[]) {
     const p = access.properties;
 
-    const category =
-      p["Catégorie fiche"]?.rollup?.array?.[0]?.select?.name ?? "";
+    const category = selectFromRollup(
+      getProp(p, "Catégorie fiche")
+    );
 
     const categorySlug = slugify(category);
 
@@ -212,15 +260,17 @@ export async function getResourcesCount(slug: string) {
 
   return counts;
 }
+
 export const getCachedClientResources = unstable_cache(
   async (slug: string, category: string) => {
     return getClientResources(slug, category);
   },
-  ["resources"],
+  ["client-resources"],
   {
-    revalidate: 60,
+    revalidate: 300,
   }
 );
+
 export const getCachedResourcesCount = unstable_cache(
   async (slug: string) => {
     return getResourcesCount(slug);

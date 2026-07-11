@@ -8,6 +8,8 @@ import {
   ChevronRight,
   Dumbbell,
   Footprints,
+  MoonStar,
+  Gem,
 } from "lucide-react";
 
 const categories = [
@@ -51,6 +53,24 @@ bg: "from-violet-600/25 via-fuchsia-600/10 to-white/[0.04]",
 iconClass: "text-violet-300 bg-violet-500/15 border-violet-300/20",
 textClass: "text-violet-300",
   },
+{
+  title: "Recovery",
+  description: "Sommeil, récupération, mobilité",
+  icon: MoonStar,
+  href: "recovery",
+  bg: "from-lime-500/25 via-emerald-500/15 to-yellow-500/10",
+  iconClass: "text-lime-300 bg-lime-400/15 border-lime-300/20",
+  textClass: "text-lime-300",
+},
+{
+  title: "Mindset",
+  description: "Motivation, discipline, psychologie",
+  icon: Gem,
+  href: "mindset",
+  bg: "from-red-500/25 via-rose-500/15 to-pink-500/10",
+  iconClass: "text-red-300 bg-red-400/15 border-red-300/20",
+  textClass: "text-red-300",
+},
 ];
 
 export default async function RessourcesPage({
@@ -75,39 +95,32 @@ const counts = await getCachedResourcesCount(slug);
           </p>
         </section>
 
-        <section className="space-y-4">
-          {categories.map((category) => {
-            const Icon = category.icon;
+        <section className="grid grid-cols-2 gap-4">
+         {categories.map((category) => {
+  const Icon = category.icon;
 
-            return (
-              <Link
-                key={category.href}
-                href={`/client/${slug}/ressources/${category.href}`}
-                className={`block overflow-hidden rounded-[30px] border border-white/10 bg-gradient-to-br ${category.bg} p-5 shadow-[0_25px_80px_rgba(0,0,0,.35)] backdrop-blur-2xl`}
-              >
-                <div className="flex items-center gap-5">
-                  <div
-                    className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-full border ${category.iconClass}`}
-                  >
-                    <Icon size={42} strokeWidth={2.2} />
-                  </div>
+  const count =
+    counts[category.href as keyof typeof counts] ?? 0;
 
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-3xl font-black">{category.title}</h2>
-                    <p className="mt-2 text-lg leading-6 text-slate-300">
-                      {category.description}
-                    </p>
-        
-                    <p className={`mt-3 text-lg font-bold ${category.textClass}`}>
-  {counts[category.key] ?? 0} fiche
-  {(counts[category.key] ?? 0) > 1 ? "s" : ""} disponible
-  {(counts[category.key] ?? 0) > 1 ? "s" : ""}
-</p>
-                  </div>
+  return (
+             <Link
+  href={`/client/${slug}/ressources/${category.href}`}
+  className={`rounded-[28px] bg-gradient-to-br ${category.bg} border border-white/10 p-5`}
+>
+  <div
+    className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full border ${category.iconClass}`}
+  >
+    <Icon size={30} />
+  </div>
 
-                  <ChevronRight className="shrink-0 text-slate-400" size={30} />
-                </div>
-              </Link>
+  <h3 className="mt-4 text-center text-xl font-black">
+    {category.title}
+  </h3>
+
+  <p className={`mt-2 text-center text-sm font-bold ${category.textClass}`}>
+    {count} fiche{count > 1 ? "s" : ""}
+  </p>
+</Link>
             );
           })}
         </section>
