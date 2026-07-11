@@ -150,18 +150,22 @@ function getCountdown(dateString: string) {
   return `📆 Dans ${diff} jours`;
 }
 
-function formatBilanMonth(dateString: string) {
-  if (!dateString) return "";
+function formatBilanMonth(dateValue?: string) {
+  if (!dateValue) return "Date non renseignée";
 
-  const [year, month, day] = dateString.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date invalide";
+  }
 
   return date
     .toLocaleDateString("fr-FR", {
       month: "long",
       year: "numeric",
+      timeZone: "Europe/Paris",
     })
-    .replace(/^./, (c) => c.toUpperCase());
+    .toUpperCase();
 }
 export default async function ClientHomePage({
   params,
@@ -575,8 +579,7 @@ const monthlyChallenges = challenges.filter(
          
 
           <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-white">
-            {formatBilanMonth(bilan.date)}
-          </p>
+{formatBilanMonth(bilan.date)}          </p>
         </div>
 
                     <div className={`relative h-3 w-3 rounded-full ${isBetter ? "bg-emerald-400" : "bg-rose-400"}`}>
