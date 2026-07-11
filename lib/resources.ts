@@ -61,8 +61,12 @@ return {
 };
 }
 
-export async function getClientResources(slug: string, category: string) {
+export async function getClientResources(
+  slug: string,
+  category: string
+) {
   const client = await getClientPage(slug);
+
   if (!client) return [];
 
   const today = new Date().toISOString().split("T")[0];
@@ -93,40 +97,70 @@ export async function getClientResources(slug: string, category: string) {
     },
   });
 
-  const fiches = await Promise.all(
-    (response.results as any[]).map(async (access) => {
-      const ficheRelation = getProp(access.properties, "Fiche")?.relation?.[0];
+  return (response.results as any[])
+    .map((access) => {
+      const p = access.properties;
 
-      if (!ficheRelation) return null;
+      const ficheCategory =
+        p["Catégorie fiche"]?.rollup?.array?.[0]?.select?.name ?? "";
 
-      const fiche = await getFicheById(ficheRelation.id);
+      if (slugify(ficheCategory) !== slugify(category)) {
+        return null;
+      }
 
-const ficheCategory = slugify(fiche.category);
-const urlCategory = slugify(category);
+      const title =
+        p["Titre fiche"]?.rollup?.array?.[0]?.title?.[0]?.plain_text ??
+        p["Titre fiche"]?.rollup?.array?.[0]?.rich_text?.[0]?.plain_text ??
+        "";
 
-console.log({
-  urlCategory: category,
-  ficheCategory: fiche.category,
-  slugUrl: urlCategory,
-  slugFiche: ficheCategory,
-  fiche: fiche.title,
-});
+      const pdfItem =
+        p["PDF fiche"]?.rollup?.array?.[0];
 
-if (!fiche.pdf) return null;
+      const previewItem =
+        p["Aperçu fiche"]?.rollup?.array?.[0];
 
-if (ficheCategory !== urlCategory) {
-  return null;
-}
+      const numberItem =
+        p["Numéro fiche"]?.rollup?.array?.[0];
 
-return fiche;
+      const pdf =
+        pdfItem?.files?.[0]?.file?.url ??
+        pdfItem?.files?.[0]?.external?.url ??
+        "";
+
+      const cover =
+        previewItem?.files?.[0]?.file?.url ??
+        previewItem?.files?.[0]?.external?.url ??
+        "";
+
+      const number =
+        numberItem?.number ??
+        null;
+
+      if (!pdf) return null;
+
+      return {
+        id: access.id,
+        title,
+        category: ficheCategory,
+        description: "",
+        pdf,
+        cover,
+        number,
+      };
     })
-  );
-
-  return fiches.filter(Boolean);
+    .filter(Boolean);
 }
 export async function getResourcesCount(slug: string) {
   const client = await getClientPage(slug);
-  if (!client) return {};
+
+  if (!client) {
+    return {
+      nutrition: 0,
+      sport: 0,
+      science: 0,
+      running: 0,
+    };
+  }
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -164,15 +198,15 @@ export async function getResourcesCount(slug: string) {
   };
 
   for (const access of response.results as any[]) {
-    const ficheRelation = getProp(access.properties, "Fiche")?.relation?.[0];
-    if (!ficheRelation) continue;
+    const p = access.properties;
 
-    const fiche = await getFicheById(ficheRelation.id);
+    const category =
+      p["Catégorie fiche"]?.rollup?.array?.[0]?.select?.name ?? "";
 
-    const cat = slugify(fiche.category);
+    const categorySlug = slugify(category);
 
-    if (counts[cat] !== undefined) {
-      counts[cat]++;
+    if (categorySlug in counts) {
+      counts[categorySlug] += 1;
     }
   }
 
@@ -193,6 +227,6 @@ export const getCachedResourcesCount = unstable_cache(
   },
   ["resources-count"],
   {
-    revalidate: 60,
+    revalidate: 300,
   }
 );
