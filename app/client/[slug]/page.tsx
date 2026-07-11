@@ -310,7 +310,7 @@ const monthlyChallenges = challenges.filter(
             </h2>
 
             <p className="mt-2 text-sm text-slate-300">
-              Plus que <span className="font-black text-emerald-300">{reste.toFixed(1)} kg</span> avant ton objectif 💪
+              Plus que <span className="font-black text-emerald-300">{reste.toFixed(1)} kg</span> avant d'y arriver ! 
             </p>
 
             <div className="mt-6 grid w-full grid-cols-3 gap-3">
