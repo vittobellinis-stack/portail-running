@@ -4,14 +4,24 @@ import type {
 
 import { notion } from "./client";
 
-const athletesDatabaseId =
-  process.env.NOTION_ATHLETES_DATABASE_ID;
+function getRequiredEnv(
+  name: string
+): string {
+  const value = process.env[name];
 
-if (!athletesDatabaseId) {
-  throw new Error(
-    "NOTION_ATHLETES_DATABASE_ID est absent de .env.local"
-  );
+  if (!value) {
+    throw new Error(
+      `${name} est absent des variables d’environnement`
+    );
+  }
+
+  return value;
 }
+
+const athletesDatabaseId =
+  getRequiredEnv(
+    "NOTION_ATHLETES_DATABASE_ID"
+  );
 
 const NAME_PROPERTY = "Nom";
 const SLUG_PROPERTY = "Slug";
