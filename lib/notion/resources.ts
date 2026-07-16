@@ -4,19 +4,6 @@ import { notion } from "@/lib/notion/client";
 
 import { getRequiredEnv } from "@/lib/env";
 
-function getRequiredEnv(
-  name: string
-): string {
-  const value = process.env[name];
-
-  if (!value) {
-    throw new Error(
-      `${name} est absent des variables d’environnement`
-    );
-  }
-
-  return value;
-}
 
 const athletesDatabaseId =
   getRequiredEnv(
