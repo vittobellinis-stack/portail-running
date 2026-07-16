@@ -1,3 +1,7 @@
+import type {
+  PageObjectResponse,
+} from "@notionhq/client/build/src/api-endpoints";
+
 import { unstable_cache } from "next/cache";
 
 import { notion } from "@/lib/notion/client";
@@ -55,11 +59,17 @@ type NotionProperties = Record<
   any
 >;
 
-type NotionPage = {
-  id: string;
-  properties: NotionProperties;
-};
-
+function isNotionPage(
+  value: unknown
+): value is PageObjectResponse {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "object" in value &&
+      value.object === "page" &&
+      "properties" in value
+  );
+}
 export type ChallengePeriod =
   | "week"
   | "month";
@@ -473,7 +483,7 @@ function isAvailableToday(
 
 async function getAthleteBySlug(
   slug: string
-): Promise<NotionPage | null> {
+): Promise<PageObjectResponse | null> {
   const cleanSlug = slug?.trim();
 
   if (!cleanSlug) {
@@ -540,7 +550,7 @@ async function getClientIdFromSlug(
 }
 
 function mapChallenge(
-  page: NotionPage
+  page: PageObjectResponse
 ): ClientChallenge {
   const properties =
     page.properties;
