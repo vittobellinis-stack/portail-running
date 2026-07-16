@@ -4,6 +4,9 @@ import { notion } from "@/lib/notion/client";
 
 import { getRequiredEnv } from "@/lib/env";
 
+import type {
+  PageObjectResponse,
+} from "@notionhq/client/build/src/api-endpoints";
 
 const athletesDatabaseId =
   getRequiredEnv(
@@ -42,10 +45,7 @@ const RESOURCE_NUMBER_PROPERTY = "Numéro";
 
 type NotionProperties = Record<string, any>;
 
-type NotionPage = {
-  id: string;
-  properties: NotionProperties;
-};
+type NotionPage = PageObjectResponse;
 
 export type ClientResource = {
   id: string;
@@ -93,11 +93,12 @@ function slugify(value?: string): string {
 
 function isNotionPage(
   value: unknown
-): value is NotionPage {
+): value is PageObjectResponse {
   return Boolean(
     value &&
       typeof value === "object" &&
-      "id" in value &&
+      "object" in value &&
+      value.object === "page" &&
       "properties" in value
   );
 }
@@ -532,32 +533,31 @@ async function getUnlockedAccessPages(
       page_size: 100,
     });
 
-  const pages =
-    response.results.filter(
-      isNotionPage
-    );
+ const pages = response.results.filter(
+  isNotionPage
+);
 
-  return pages
-    .filter(isUnlockedForToday)
-    .sort((a, b) => {
-      const orderA =
-        getNumberValue(
-          getProperty(
-            a.properties,
-            ACCESS_ORDER_PROPERTY
-          )
-        ) ?? 0;
+return pages
+  .filter(isUnlockedForToday)
+  .sort((a, b) => {
+    const orderA =
+      getNumberValue(
+        getProperty(
+          a.properties,
+          ACCESS_ORDER_PROPERTY
+        )
+      ) ?? 0;
 
-      const orderB =
-        getNumberValue(
-          getProperty(
-            b.properties,
-            ACCESS_ORDER_PROPERTY
-          )
-        ) ?? 0;
+    const orderB =
+      getNumberValue(
+        getProperty(
+          b.properties,
+          ACCESS_ORDER_PROPERTY
+        )
+      ) ?? 0;
 
-      return orderA - orderB;
-    });
+    return orderA - orderB;
+  });
 }
 
 async function mapAccessToResources(
