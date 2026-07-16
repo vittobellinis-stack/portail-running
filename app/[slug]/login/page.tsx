@@ -51,8 +51,7 @@ export default async function LoginPage({
       redirect("/login?error=1");
     }
 
-    const cookieStore =
-      await cookies();
+    const cookieStore = await cookies();
 
 cookieStore.set(
   "client-auth",
@@ -60,13 +59,14 @@ cookieStore.set(
   {
     httpOnly: true,
     secure:
-      process.env.NODE_ENV ===
-      "production",
+      process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
   }
 );
+
+console.log("[LOGIN] Cookie créé pour :", slug);
 
 redirect(`/${slug}`);
   }
