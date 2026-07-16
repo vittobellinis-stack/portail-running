@@ -228,8 +228,7 @@ function getCheckbox(
     property.type === "formula" &&
     property.formula.type === "boolean"
   ) {
-    return property.formula.boolean;
-  }
+return property.formula.boolean ?? false;  }
 
   return false;
 }
