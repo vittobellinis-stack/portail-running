@@ -67,7 +67,8 @@ cookieStore.set(
 );
 
 console.log("[LOGIN] Cookie créé pour :", slug);
-
+console.log("[LOGIN] Slug :", slug);
+console.log("[LOGIN] Connexion valide :", isValid);
 redirect(`/${slug}`);
   }
 

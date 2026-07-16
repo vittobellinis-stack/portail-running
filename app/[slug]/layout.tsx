@@ -20,7 +20,8 @@ export default async function SlugLayout({
 
   const authenticatedSlug =
     cookieStore.get("client-auth")?.value;
-
+console.log("[AUTH] Slug URL :", slug);
+console.log("[AUTH] Cookie :", authenticatedSlug);
   if (authenticatedSlug !== slug) {
     redirect("/login");
   }
