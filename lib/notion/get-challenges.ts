@@ -102,16 +102,6 @@ function clean(
     .trim();
 }
 
-function isNotionPage(
-  value: unknown
-): value is NotionPage {
-  return Boolean(
-    value &&
-      typeof value === "object" &&
-      "id" in value &&
-      "properties" in value
-  );
-}
 
 function getProperty(
   properties: NotionProperties,
