@@ -4,21 +4,24 @@ import type {
 
 import { notion } from "@/lib/notion/client";
 
-import { getRequiredEnv } from "@/lib/env";
+function getRequiredEnv(
+  name: string
+): string {
+  const value = process.env[name];
 
-const athletesDatabaseId = getRequiredEnv(
-  "NOTION_ATHLETES_DATABASE_ID"
-);
+  if (!value) {
+    throw new Error(
+      `${name} est absent des variables d’environnement`
+    );
+  }
 
-const clientsDatabaseId = getRequiredEnv(
-  "NOTION_CLIENTS_DATABASE_ID"
-);
-
-if (!clientsDatabaseId) {
-  throw new Error(
-    "NOTION_CLIENTS_DATABASE_ID est absent de .env.local"
-  );
+  return value;
 }
+
+const clientsDatabaseId =
+  getRequiredEnv(
+    "NOTION_CLIENTS_DATABASE_ID"
+  );
 
 const CLIENT_SLUG_PROPERTY = "Slug";
 const CLIENT_PASSWORD_PROPERTY =
@@ -26,6 +29,18 @@ const CLIENT_PASSWORD_PROPERTY =
 
 type NotionProperties =
   PageObjectResponse["properties"];
+
+function isPageObjectResponse(
+  value: unknown
+): value is PageObjectResponse {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "object" in value &&
+      value.object === "page" &&
+      "properties" in value
+  );
+}
 
 function getTextValue(
   properties: NotionProperties,
@@ -37,23 +52,32 @@ function getTextValue(
     return "";
   }
 
-  if (property.type === "rich_text") {
+  if (
+    property.type === "rich_text"
+  ) {
     return property.rich_text
-      .map((item) => item.plain_text)
+      .map(
+        (item) =>
+          item.plain_text
+      )
       .join("")
       .trim();
   }
 
   if (property.type === "title") {
     return property.title
-      .map((item) => item.plain_text)
+      .map(
+        (item) =>
+          item.plain_text
+      )
       .join("")
       .trim();
   }
 
   if (
     property.type === "formula" &&
-    property.formula.type === "string"
+    property.formula.type ===
+      "string"
   ) {
     return (
       property.formula.string?.trim() ??
@@ -75,13 +99,17 @@ export async function checkClientPassword(
   const cleanPassword =
     password.trim();
 
-  if (!cleanSlug || !cleanPassword) {
+  if (
+    !cleanSlug ||
+    !cleanPassword
+  ) {
     return false;
   }
 
   const response =
     await notion.databases.query({
-      database_id: clientsDatabaseId,
+      database_id:
+        clientsDatabaseId,
 
       filter: {
         property:
@@ -100,7 +128,7 @@ export async function checkClientPassword(
 
   if (
     !result ||
-    !("properties" in result)
+    !isPageObjectResponse(result)
   ) {
     return false;
   }
@@ -112,6 +140,7 @@ export async function checkClientPassword(
     );
 
   return (
-    storedPassword === cleanPassword
+    storedPassword ===
+    cleanPassword
   );
 }
