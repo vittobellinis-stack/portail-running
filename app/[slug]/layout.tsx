@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 
 type SlugLayoutProps = {
   children: ReactNode;
@@ -19,12 +18,18 @@ export default async function SlugLayout({
   const cookieStore = await cookies();
 
   const authenticatedSlug =
-    cookieStore.get("client-auth")?.value;
-console.log("[AUTH] Slug URL :", slug);
-console.log("[AUTH] Cookie :", authenticatedSlug);
-  if (authenticatedSlug !== slug) {
-    redirect("/login");
-  }
+    cookieStore.get("client-auth")?.value ?? "";
 
-  return children;
+  console.log("[AUTH] Slug demandé :", slug);
+  console.log("[AUTH] Cookie reçu :", authenticatedSlug);
+
+  return (
+    <>
+      <div className="fixed left-2 top-2 z-[9999] rounded bg-black px-2 py-1 text-xs text-white">
+        URL : {slug} — Cookie : {authenticatedSlug || "absent"}
+      </div>
+
+      {children}
+    </>
+  );
 }
