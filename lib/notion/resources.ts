@@ -4,28 +4,29 @@ import { notion } from "@/lib/notion/client";
 
 import { getRequiredEnv } from "@/lib/env";
 
-const athletesDatabaseId = getRequiredEnv(
-  "NOTION_ATHLETES_DATABASE_ID"
-);
+function getRequiredEnv(
+  name: string
+): string {
+  const value = process.env[name];
 
-const clientsDatabaseId = getRequiredEnv(
-  "NOTION_CLIENTS_DATABASE_ID"
-);
+  if (!value) {
+    throw new Error(
+      `${name} est absent des variables d’environnement`
+    );
+  }
+
+  return value;
+}
+
+const athletesDatabaseId =
+  getRequiredEnv(
+    "NOTION_ATHLETES_DATABASE_ID"
+  );
 
 const accessResourcesDatabaseId =
-  process.env.NOTION_ACCES_FICHES_DATABASE_ID;
-
-if (!athletesDatabaseId) {
-  throw new Error(
-    "NOTION_ATHLETES_DATABASE_ID est absent de .env.local"
+  getRequiredEnv(
+    "NOTION_ACCES_FICHES_DATABASE_ID"
   );
-}
-
-if (!accessResourcesDatabaseId) {
-  throw new Error(
-    "NOTION_ACCES_FICHES_DATABASE_ID est absent de .env.local"
-  );
-}
 
 /*
   Base Athlètes
