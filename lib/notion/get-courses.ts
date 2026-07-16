@@ -4,15 +4,24 @@ import type {
 
 import { notion } from "./client";
 
-const racesDatabaseId =
-  process.env.NOTION_RACES_DATABASE_ID;
+function getRequiredEnv(
+  name: string
+): string {
+  const value = process.env[name];
 
-if (!racesDatabaseId) {
-  throw new Error(
-    "NOTION_RACES_DATABASE_ID est absent de .env.local"
-  );
+  if (!value) {
+    throw new Error(
+      `${name} est absent des variables d’environnement`
+    );
+  }
+
+  return value;
 }
 
+const racesDatabaseId =
+  getRequiredEnv(
+    "NOTION_RACES_DATABASE_ID"
+  );
 export type Race = {
   id: string;
   name: string;
