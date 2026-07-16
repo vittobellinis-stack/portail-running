@@ -2,8 +2,15 @@ import { unstable_cache } from "next/cache";
 
 import { notion } from "@/lib/notion/client";
 
-const athletesDatabaseId =
-  process.env.NOTION_ATHLETES_DATABASE_ID;
+import { getRequiredEnv } from "@/lib/env";
+
+const athletesDatabaseId = getRequiredEnv(
+  "NOTION_ATHLETES_DATABASE_ID"
+);
+
+const clientsDatabaseId = getRequiredEnv(
+  "NOTION_CLIENTS_DATABASE_ID"
+);
 
 const accessResourcesDatabaseId =
   process.env.NOTION_ACCES_FICHES_DATABASE_ID;

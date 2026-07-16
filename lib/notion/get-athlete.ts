@@ -450,7 +450,7 @@ export async function getAthleteBySlug(
 
   const response =
     await notion.databases.query({
-      database_id: athletesDatabaseId,
+      database_id: athletesDatabaseId!,
 
       filter: {
         property: SLUG_PROPERTY,

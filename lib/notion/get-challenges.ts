@@ -2,23 +2,29 @@ import { unstable_cache } from "next/cache";
 
 import { notion } from "@/lib/notion/client";
 
+function getRequiredEnv(
+  name: string
+): string {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(
+      `${name} est absent des variables d’environnement`
+    );
+  }
+
+  return value;
+}
+
 const athletesDatabaseId =
-  process.env.NOTION_ATHLETES_DATABASE_ID;
+  getRequiredEnv(
+    "NOTION_ATHLETES_DATABASE_ID"
+  );
 
 const clientChallengesDatabaseId =
-  process.env.NOTION_CLIENT_CHALLENGES_DATABASE_ID;
-
-if (!athletesDatabaseId) {
-  throw new Error(
-    "NOTION_ATHLETES_DATABASE_ID est absent de .env.local"
+  getRequiredEnv(
+    "NOTION_CLIENT_CHALLENGES_DATABASE_ID"
   );
-}
-
-if (!clientChallengesDatabaseId) {
-  throw new Error(
-    "NOTION_CLIENT_CHALLENGES_DATABASE_ID est absent de .env.local"
-  );
-}
 
 /*
   Base Athlètes
