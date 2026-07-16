@@ -55,8 +55,8 @@ export default async function LoginPage({
       await cookies();
 
 cookieStore.set(
-  `client-auth-${slug}`,
-  "true",
+  "client-auth",
+  slug,
   {
     httpOnly: true,
     secure:
