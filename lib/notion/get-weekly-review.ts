@@ -4,8 +4,24 @@ import type {
 
 import { notion } from "./client";
 
+function getRequiredEnv(
+  name: string
+): string {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(
+      `${name} est absent des variables d’environnement`
+    );
+  }
+
+  return value;
+}
+
 const weeklyReviewsDatabaseId =
-  process.env.NOTION_WEEKLY_REVIEWS_DATABASE_ID;
+  getRequiredEnv(
+    "NOTION_WEEKLY_REVIEWS_DATABASE_ID"
+  );
 
 const ATHLETE_PROPERTY = "Athlète";
 const DATE_PROPERTY = "Date du bilan";
@@ -18,6 +34,7 @@ export type WeeklyReview = {
   formState: string;
   weeklyVolume: number | null;
 };
+
 export type WeeklyReviewSummary = {
   latestReview: WeeklyReview | null;
   lifetimeDistance: number;
@@ -25,6 +42,18 @@ export type WeeklyReviewSummary = {
 
 type NotionProperties =
   PageObjectResponse["properties"];
+
+function isPageObjectResponse(
+  value: unknown
+): value is PageObjectResponse {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "object" in value &&
+      value.object === "page" &&
+      "properties" in value
+  );
+}
 
 function getDate(
   properties: NotionProperties,
@@ -81,14 +110,15 @@ function getFormState(
   if (property.type === "rich_text") {
     return property.rich_text
       .map((item) => item.plain_text)
-      .join("");
+      .join("")
+      .trim();
   }
 
   if (
     property.type === "formula" &&
     property.formula.type === "string"
   ) {
-    return property.formula.string ?? "";
+    return property.formula.string?.trim() ?? "";
   }
 
   console.warn(
@@ -141,7 +171,8 @@ function getTimestamp(
     return 0;
   }
 
-  const timestamp = new Date(date).getTime();
+  const timestamp =
+    new Date(date).getTime();
 
   return Number.isNaN(timestamp)
     ? 0
@@ -151,42 +182,40 @@ function getTimestamp(
 export async function getWeeklyReviewSummaryByAthleteId(
   athleteId: string
 ): Promise<WeeklyReviewSummary> {
-  if (!weeklyReviewsDatabaseId) {
-    console.warn(
-      "NOTION_WEEKLY_REVIEWS_DATABASE_ID est absent de .env.local"
-    );
-
+  if (!athleteId) {
     return {
       latestReview: null,
       lifetimeDistance: 0,
     };
   }
 
-  const response = await notion.databases.query({
-    database_id: weeklyReviewsDatabaseId,
-    filter: {
-      property: ATHLETE_PROPERTY,
-      relation: {
-        contains: athleteId,
+  const response =
+    await notion.databases.query({
+      database_id:
+        weeklyReviewsDatabaseId,
+
+      filter: {
+        property:
+          ATHLETE_PROPERTY,
+
+        relation: {
+          contains: athleteId,
+        },
       },
-    },
-    page_size: 100,
-  });
+
+      page_size: 100,
+    });
 
   const pages = response.results
-    .filter(
-      (
-        result
-      ): result is PageObjectResponse =>
-        "properties" in result
-    )
+    .filter(isPageObjectResponse)
     .sort(
       (a, b) =>
         getTimestamp(b.properties) -
         getTimestamp(a.properties)
     );
 
-  const latestPage = pages[0];
+  const latestPage =
+    pages[0] ?? null;
 
   const latestReview: WeeklyReview | null =
     latestPage
@@ -210,17 +239,22 @@ export async function getWeeklyReviewSummaryByAthleteId(
         }
       : null;
 
-  const lifetimeDistance = pages.reduce(
-    (total, page) => {
-      const weeklyVolume = getNumber(
-        page.properties,
-        VOLUME_PROPERTY
-      );
+  const lifetimeDistance =
+    pages.reduce(
+      (total, page) => {
+        const weeklyVolume =
+          getNumber(
+            page.properties,
+            VOLUME_PROPERTY
+          );
 
-      return total + (weeklyVolume ?? 0);
-    },
-    0
-  );
+        return (
+          total +
+          (weeklyVolume ?? 0)
+        );
+      },
+      0
+    );
 
   return {
     latestReview,
