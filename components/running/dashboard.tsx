@@ -1,6 +1,8 @@
 import type { Athlete } from "@/lib/notion/get-athlete";
 import type { Race } from "@/lib/notion/get-courses";
-import type { WeeklyReview } from "@/lib/notion/get-weekly-review";
+import type {
+  WeeklyReviewSummary,
+} from "@/lib/notion/get-weekly-review";
 
 import {
   getChallengesByAthleteSlug,
@@ -20,7 +22,7 @@ import Records from "./records";
 type DashboardProps = {
   athlete: Athlete;
   courses: Race[];
-  weeklyReview: WeeklyReview | null;
+ weeklyReview: WeeklyReviewSummary | null;
   lifetimeDistance: number;
 };
 

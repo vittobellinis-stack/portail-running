@@ -7,14 +7,16 @@ import {
 } from "lucide-react";
 
 import type { Athlete } from "@/lib/notion/get-athlete";
-import type { WeeklyReview } from "@/lib/notion/get-weekly-review";
+import type {
+  WeeklyReviewSummary,
+} from "@/lib/notion/get-weekly-review";
 
 import Card from "./card";
 import SectionTitle from "./section-title";
 
 type IndicatorsProps = {
   athlete: Athlete;
-  weeklyReview: WeeklyReview | null;
+weeklyReview: WeeklyReviewSummary | null;
   lifetimeDistance: number;
 };
 
