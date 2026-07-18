@@ -508,6 +508,11 @@ async function getAthleteBySlug(
 async function getClientIdFromSlug(
   slug: string
 ): Promise<string | null> {
+  console.log(
+    "[Challenges] Slug reçu :",
+    slug
+  );
+
   const athlete =
     await getAthleteBySlug(slug);
 
@@ -519,22 +524,37 @@ async function getClientIdFromSlug(
     return null;
   }
 
+  console.log(
+    "[Challenges] Athlète trouvé :",
+    athlete.id
+  );
+
+  console.log(
+    "[Challenges] Propriétés Athlète :",
+    Object.keys(athlete.properties)
+  );
+
   const clientProperty =
     getProperty(
       athlete.properties,
       ATHLETE_CLIENT_PROPERTY
     );
 
-  const clientId =
-    getRelationIds(
-      clientProperty
-    )[0] ?? null;
+  console.log(
+    "[Challenges] Relation Client brute :",
+    clientProperty
+  );
 
-  if (!clientId) {
-    console.warn(
-      `[Challenges] Aucun client relié à l’athlète "${slug}"`
-    );
-  }
+  const clientIds =
+    getRelationIds(clientProperty);
+
+  const clientId =
+    clientIds[0] ?? null;
+
+  console.log(
+    "[Challenges] Client relié :",
+    clientId ?? "AUCUN"
+  );
 
   return clientId;
 }
@@ -628,6 +648,10 @@ export async function getChallengesByAthleteSlug(
     await getClientIdFromSlug(slug);
 
   if (!clientId) {
+    console.warn(
+      `[Challenges] Aucun Client trouvé pour "${slug}"`
+    );
+
     return [];
   }
 
@@ -648,10 +672,28 @@ export async function getChallengesByAthleteSlug(
       page_size: 50,
     });
 
-  return response.results
-    .filter(isNotionPage)
-    .map(mapChallenge)
-    .filter(isAvailableToday);
+  console.log(
+    "[Challenges] Challenges trouvés pour",
+    slug,
+    ":",
+    response.results.length
+  );
+
+  const challenges =
+    response.results
+      .filter(isNotionPage)
+      .map(mapChallenge)
+      .filter(isAvailableToday);
+
+  console.log(
+    "[Challenges] Challenges disponibles aujourd’hui :",
+    challenges.map(
+      (challenge) =>
+        challenge.title
+    )
+  );
+
+  return challenges;
 }
 
 export const getCachedChallengesByAthleteSlug =
